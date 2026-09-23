@@ -11,6 +11,7 @@ import {
   getResourceIndex,
   getStates,
   getSummary,
+  getTimeline,
 } from "../api";
 import type {
   ConsoleEvent,
@@ -22,10 +23,12 @@ import type {
   SessionSummary,
   StateCheckpoint,
   StateGraph,
+  TimelineEntry,
 } from "../types";
 import GraphView from "../components/GraphView";
 import StateDetailTabs from "../components/StateDetailTabs";
 import CompareView from "../components/CompareView";
+import TimelineView from "../components/TimelineView";
 
 type SidebarMode = "list" | "graph";
 
@@ -42,11 +45,13 @@ export default function SessionView() {
   const [mutations, setMutations] = useState<DomMutationEvent[]>([]);
   const [resourceIndex, setResourceIndex] = useState<ResourceIndex>({});
   const [explorationReport, setExplorationReport] = useState<ExplorationReport | undefined>();
+  const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
 
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>("list");
   const [selectedId, setSelectedId] = useState<string>();
   const [compareMode, setCompareMode] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [timelineMode, setTimelineMode] = useState(false);
   const [showExplorationReport, setShowExplorationReport] = useState(false);
 
   useEffect(() => {
@@ -62,6 +67,7 @@ export default function SessionView() {
     getMutations(sessionId).then(setMutations);
     getResourceIndex(sessionId).then(setResourceIndex);
     getExplorationReport(sessionId).then(setExplorationReport);
+    getTimeline(sessionId).then(setTimeline);
   }, [sessionId]);
 
   const selectedState = useMemo(() => states?.find((s) => s.id === selectedId), [states, selectedId]);
@@ -122,12 +128,20 @@ export default function SessionView() {
                 Graph
               </TabButton>
             </div>
-            <button
-              onClick={() => setCompareMode((v) => !v)}
-              className={`rounded px-2 py-1 text-xs ${compareMode ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"}`}
-            >
-              Compare
-            </button>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setTimelineMode((v) => !v)}
+                className={`rounded px-2 py-1 text-xs ${timelineMode ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"}`}
+              >
+                Timeline
+              </button>
+              <button
+                onClick={() => setCompareMode((v) => !v)}
+                className={`rounded px-2 py-1 text-xs ${compareMode ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"}`}
+              >
+                Compare
+              </button>
+            </div>
           </div>
 
           {sidebarMode === "graph" ? (
@@ -171,7 +185,16 @@ export default function SessionView() {
         </aside>
 
         <main className="min-h-0 flex-1">
-          {compareMode && compareIds.length === 2 ? (
+          {timelineMode ? (
+            <TimelineView
+              timeline={timeline}
+              startedAt={summary.startedAt}
+              onSelectState={(stateId) => {
+                setSelectedId(stateId);
+                setTimelineMode(false);
+              }}
+            />
+          ) : compareMode && compareIds.length === 2 ? (
             <CompareView sessionId={sessionId} states={states} compareIds={compareIds} />
           ) : selectedState ? (
             <StateDetailTabs
