@@ -10,11 +10,13 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "record": "tsx src/cli.ts record",
+    "explore": "tsx src/cli.ts explore",
     "test": "tsx tests/smoke.ts",
     "test:explore": "tsx tests/smoke-explore.ts",
     "serve": "tsx src/server/index.ts",
     "dashboard:dev": "npm run dev --prefix dashboard",
     "dashboard:build": "npm run build --prefix dashboard",
+    "seed-dashboard-data": "tsx scripts/seed-dashboard-data.ts",
     "postinstall": "playwright install chromium"
   },
   "dependencies": {
